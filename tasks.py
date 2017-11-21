@@ -47,6 +47,10 @@ else:
 
     count = defaultdict(lambda: defaultdict(lambda: 0))
 
+def json_senses(lemma):
+    array = [{'sense': sense, 'definition': definition} for sense, definition in senses[lemma].items()]
+    return json.dumps(array)
+
 id = 1
 
 for f in args.word:
@@ -67,11 +71,11 @@ for f in args.word:
         left, word, right = row[1:4]
 
         if args.train is None:
-            print('\t'.join((str(id), lemma, left, word, right, json.dumps(list(senses[lemma].items())))))
+            print('\t'.join((str(id), lemma, left, word, right, json_senses(lemma))))
             id += 1
         else:
             if count[lemma][sense_id] < args.train:
-                print('\t'.join((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json.dumps(list(senses[lemma].items())))))
+                print('\t'.join((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json_senses(lemma))))
                 id += 1
 
             count[lemma][sense_id] += 1

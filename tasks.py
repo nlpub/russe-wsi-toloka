@@ -6,15 +6,14 @@ import re
 import sys
 import os
 import json
-
-# The format is (id, lemma, left, word, right, sense_id, senses)
-HEADER = ('id', 'lemma', 'left', 'word', 'right', 'sense_id', 'senses')
+from collections import defaultdict
 
 SEPARATOR = re.compile(' *[,;] +\d+ +- +')
 MEANING   = re.compile('^\d+ +- +')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--summary', required=True, type=argparse.FileType('r', encoding='UTF-8'))
+parser.add_argument('--train', type=int)
 parser.add_argument('word', type=argparse.FileType('r', encoding='UTF-8'), nargs='+')
 args = parser.parse_args()
 
@@ -25,7 +24,28 @@ reader = csv.DictReader(args.summary, delimiter=',')
 for row in reader:
     senses[row['word']] = {i + 1: sense for i, sense in enumerate(re.split(SEPARATOR, re.sub(MEANING, '', row['meaning BTS']).strip()))}
 
-print('\t'.join(HEADER))
+if args.train is None:
+    print('\t'.join((
+        'INPUT:id',
+        'INPUT:lemma',
+        'INPUT:left',
+        'INPUT:word',
+        'INPUT:right',
+        'INPUT:senses'
+    )))
+else:
+    print('\t'.join((
+        'INPUT:id',
+        'INPUT:lemma',
+        'INPUT:left',
+        'INPUT:word',
+        'INPUT:right',
+        'GOLDEN:sense_id',
+        'HINT:text',
+        'INPUT:senses'
+    )))
+
+    count = defaultdict(lambda: defaultdict(lambda: 0))
 
 id = 1
 
@@ -46,6 +66,12 @@ for f in args.word:
 
         left, word, right = row[1:4]
 
-        print('\t'.join((str(id), lemma, left, word, right, str(sense_id), json.dumps(senses[lemma]))))
+        if args.train is None:
+            print('\t'.join((str(id), lemma, left, word, right, json.dumps(senses[lemma]))))
+            id += 1
+        else:
+            if count[lemma][sense_id] < args.train:
+                print('\t'.join((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json.dumps(senses[lemma]))))
+                id += 1
 
-        id += 1
+            count[lemma][sense_id] += 1

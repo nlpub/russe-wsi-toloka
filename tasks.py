@@ -24,17 +24,19 @@ reader = csv.DictReader(args.summary, delimiter=',')
 for row in reader:
     senses[row['word']] = {i + 1: sense for i, sense in enumerate(re.split(SEPARATOR, re.sub(MEANING, '', row['meaning BTS']).strip()))}
 
+writer = csv.writer(sys.stdout, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
+
 if args.train is None:
-    print('\t'.join((
+    writer.writerow((
         'INPUT:id',
         'INPUT:lemma',
         'INPUT:left',
         'INPUT:word',
         'INPUT:right',
         'INPUT:senses'
-    )))
+    ))
 else:
-    print('\t'.join((
+    writer.writerow((
         'INPUT:id',
         'INPUT:lemma',
         'INPUT:left',
@@ -43,7 +45,7 @@ else:
         'GOLDEN:sense_id',
         'HINT:text',
         'INPUT:senses'
-    )))
+    ))
 
     count = defaultdict(lambda: defaultdict(lambda: 0))
 
@@ -71,11 +73,11 @@ for f in args.word:
         left, word, right = row[1:4]
 
         if args.train is None:
-            print('\t'.join((str(id), lemma, left, word, right, json_senses(lemma))))
+            writer.writerow((str(id), lemma, left, word, right, json_senses(lemma)))
             id += 1
         else:
             if count[lemma][sense_id] < args.train:
-                print('\t'.join((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json_senses(lemma))))
+                writer.writerow((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json_senses(lemma)))
                 id += 1
 
             count[lemma][sense_id] += 1

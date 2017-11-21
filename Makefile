@@ -7,7 +7,7 @@ TEST  := $(shell find test  -maxdepth 1 -regex '.*/[А-Яа-яЁё]+\.csv' | sor
 all: tasks-train.tsv tasks-test.tsv
 
 tasks-train.tsv:
-	./tasks.py --train=1 --summary=train/summary.csv $(TRAIN) >tasks-train.tsv
+	./tasks.py --train=5 --summary=train/summary.csv $(TRAIN) >tasks-train.tsv
 
 tasks-test.tsv:
 	./tasks.py --summary=test/summary.csv $(TEST) >tasks-test.tsv

@@ -67,11 +67,11 @@ for f in args.word:
         left, word, right = row[1:4]
 
         if args.train is None:
-            print('\t'.join((str(id), lemma, left, word, right, json.dumps(senses[lemma].items()))))
+            print('\t'.join((str(id), lemma, left, word, right, json.dumps(list(senses[lemma].items())))))
             id += 1
         else:
             if count[lemma][sense_id] < args.train:
-                print('\t'.join((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json.dumps(senses[lemma].items()))))
+                print('\t'.join((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json.dumps(list(senses[lemma].items())))))
                 id += 1
 
             count[lemma][sense_id] += 1

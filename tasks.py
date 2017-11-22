@@ -81,7 +81,9 @@ else:
                      'INPUT:senses'))
 
 for task in tasks:
+    senses_json = json.dumps(senses_array(task.senses))
+
     if args.train is None:
-        writer.writerow((task.id, task.lemma, task.left, task.word, task.right, json.dumps(task.senses)))
+        writer.writerow((task.id, task.lemma, task.left, task.word, task.right, senses_json))
     else:
-        writer.writerow((task.id, task.lemma, task.left, task.word, task.right, task.sense_id, task.hint, json.dumps(task.senses)))
+        writer.writerow((task.id, task.lemma, task.left, task.word, task.right, task.sense_id, task.hint, senses_json))

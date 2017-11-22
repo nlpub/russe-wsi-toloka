@@ -9,7 +9,7 @@ import json
 from collections import defaultdict
 
 SEPARATOR = re.compile(' *[,;] +\d+ +- +')
-MEANING   = re.compile('^\d+ +- +')
+MEANING   = re.compile('^(\d+ +-){0,1} *(\'){0,1}')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--summary', required=True, type=argparse.FileType('r', encoding='UTF-8'))
@@ -22,7 +22,8 @@ senses = {}
 reader = csv.DictReader(args.summary, delimiter=',')
 
 for row in reader:
-    senses[row['word']] = {i + 1: sense for i, sense in enumerate(re.split(SEPARATOR, re.sub(MEANING, '', row['meaning BTS']).strip()))}
+    senses[row['word']] = {i + 1: re.sub(MEANING, '', sense)
+                           for i, sense in enumerate(re.split(SEPARATOR, row['meaning BTS'].strip()))}
 
 writer = csv.writer(sys.stdout, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
 
@@ -77,7 +78,8 @@ for f in args.word:
             id += 1
         else:
             if count[lemma][sense_id] < args.train:
-                writer.writerow((str(id), lemma, left, word, right, str(sense_id), senses[lemma][sense_id], json_senses(lemma)))
+                hint = 'В данном случае, слово «%s» имеет значение «%s».' % (lemma, senses[lemma][sense_id])
+                writer.writerow((str(id), lemma, left, word, right, str(sense_id), hint, json_senses(lemma)))
                 id += 1
 
             count[lemma][sense_id] += 1

@@ -4,18 +4,26 @@ import argparse
 import csv
 import re
 import sys
+import random
 import os
 import json
-from collections import defaultdict
+from collections import namedtuple, defaultdict
+from functools import lru_cache
 
 SEPARATOR = re.compile(' *[,;] +\d+ +- +')
 MEANING   = re.compile('^(\d+ +-){0,1} *(\'){0,1}')
 
+Task = namedtuple('Task', 'id lemma left word right sense_id hint senses')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--summary', required=True, type=argparse.FileType('r', encoding='UTF-8'))
+parser.add_argument('--shuffle', type=int)
 parser.add_argument('--train', type=int)
 parser.add_argument('word', type=argparse.FileType('r', encoding='UTF-8'), nargs='+')
 args = parser.parse_args()
+
+if args.shuffle is not None:
+    random.seed(args.shuffle)
 
 senses = {}
 
@@ -25,36 +33,14 @@ for row in reader:
     senses[row['word']] = {i + 1: re.sub(MEANING, '', sense)
                            for i, sense in enumerate(re.split(SEPARATOR, row['meaning BTS'].strip()))}
 
-writer = csv.writer(sys.stdout, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
+@lru_cache(len(senses))
+def senses_array(lemma):
+    return [{'sense': sense, 'definition': definition}
+             for sense, definition in senses[lemma].items()]
 
-if args.train is None:
-    writer.writerow((
-        'INPUT:id',
-        'INPUT:lemma',
-        'INPUT:left',
-        'INPUT:word',
-        'INPUT:right',
-        'INPUT:senses'
-    ))
-else:
-    writer.writerow((
-        'INPUT:id',
-        'INPUT:lemma',
-        'INPUT:left',
-        'INPUT:word',
-        'INPUT:right',
-        'GOLDEN:sense_id',
-        'HINT:text',
-        'INPUT:senses'
-    ))
+count, id = defaultdict(lambda: defaultdict(lambda: 0)), 1
 
-    count = defaultdict(lambda: defaultdict(lambda: 0))
-
-def json_senses(lemma):
-    array = [{'sense': sense, 'definition': definition} for sense, definition in senses[lemma].items()]
-    return json.dumps(array)
-
-id = 1
+tasks = []
 
 for f in args.word:
     lemma, *_ = os.path.basename(f.name).rpartition('.')
@@ -73,13 +59,29 @@ for f in args.word:
 
         left, word, right = row[1:4]
 
-        if args.train is None:
-            writer.writerow((str(id), lemma, left, word, right, json_senses(lemma)))
-            id += 1
-        else:
-            if count[lemma][sense_id] < args.train:
-                hint = 'В данном случае, слово «%s» имеет значение «%s».' % (lemma, senses[lemma][sense_id])
-                writer.writerow((str(id), lemma, left, word, right, str(sense_id), hint, json_senses(lemma)))
-                id += 1
+        hint = 'В данном случае, слово «%s» имеет значение «%s».' % (lemma, senses[lemma][sense_id])
 
-            count[lemma][sense_id] += 1
+        if args.train is None or count[lemma][sense_id] < args.train:
+            tasks.append(Task(id, lemma, *row[1:4], sense_id, hint, senses[lemma]))
+            id += 1
+
+        count[lemma][sense_id] += 1
+
+if args.shuffle:
+    random.shuffle(tasks)
+
+writer = csv.writer(sys.stdout, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
+
+if args.train is None:
+    writer.writerow(('INPUT:id', 'INPUT:lemma', 'INPUT:left', 'INPUT:word',
+                     'INPUT:right', 'INPUT:senses'))
+else:
+    writer.writerow(('INPUT:id', 'INPUT:lemma', 'INPUT:left', 'INPUT:word',
+                     'INPUT:right', 'GOLDEN:sense_id', 'HINT:text',
+                     'INPUT:senses'))
+
+for task in tasks:
+    if args.train is None:
+        writer.writerow((task.id, task.lemma, task.left, task.word, task.right, json.dumps(task.senses)))
+    else:
+        writer.writerow((task.id, task.lemma, task.left, task.word, task.right, task.sense_id, task.hint, json.dumps(task.senses)))

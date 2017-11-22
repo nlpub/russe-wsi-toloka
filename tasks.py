@@ -8,7 +8,6 @@ import random
 import os
 import json
 from collections import namedtuple, defaultdict
-from functools import lru_cache
 
 SEPARATOR = re.compile(' *[,;] +\d+ +- +')
 MEANING   = re.compile('^(\d+ +-){0,1} *(\'){0,1}')
@@ -33,10 +32,10 @@ for row in reader:
     senses[row['word']] = {i + 1: re.sub(MEANING, '', sense)
                            for i, sense in enumerate(re.split(SEPARATOR, row['meaning BTS'].strip()))}
 
-@lru_cache(len(senses))
-def senses_array(lemma):
+def senses_array(lemma_senses):
+    print(lemma_senses, file=sys.stderr)
     return [{'sense': sense, 'definition': definition}
-             for sense, definition in senses[lemma].items()]
+             for sense, definition in lemma_senses.items()]
 
 count, id = defaultdict(lambda: defaultdict(lambda: 0)), 1
 

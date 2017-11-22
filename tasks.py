@@ -33,7 +33,6 @@ for row in reader:
                            for i, sense in enumerate(re.split(SEPARATOR, row['meaning BTS'].strip()))}
 
 def senses_array(lemma_senses):
-    print(lemma_senses, file=sys.stderr)
     return [{'sense': sense, 'definition': definition}
              for sense, definition in lemma_senses.items()]
 

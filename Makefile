@@ -12,5 +12,11 @@ tasks-train.tsv:
 tasks-test.tsv:
 	./tasks.py --summary=test/summary.csv $(TEST) >tasks-test.tsv
 
+tasks-eval.tsv:
+	./tasks.py --train=9999 --summary=test/summary.csv $(TEST) >tasks-eval.tsv
+
+report.tsv:
+	./report.py tasks-eval.tsv aggregated_results_pool_1036853__2017_12_01.tsv > report.tsv
+
 clean:
 	rm -fv *.tsv

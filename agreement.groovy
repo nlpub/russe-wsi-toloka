@@ -16,7 +16,7 @@ if (args.length != 1) {
 }
 
 items  = new HashMap<String, Map<String, Boolean>>()
-raters = new HashMap<String, Integer>()
+workers = new HashMap<String, Integer>()
 
 Paths.get(args[0]).withReader { reader ->
     CSVParser csv = new CSVParser(reader, TDF.withHeader())
@@ -32,15 +32,15 @@ Paths.get(args[0]).withReader { reader ->
         workerID = record.get('ASSIGNMENT:worker_id')
         items[taskID][workerID] = Integer.valueOf(record.get('OUTPUT:sense_id'))
 
-        if (!raters.containsKey(workerID)) raters[workerID] = raters.size()
+        if (!workers.containsKey(workerID)) workers[workerID] = workers.size()
     }
 }
 
-study = new CodingAnnotationStudy(raters.size())
+study = new CodingAnnotationStudy(workers.size())
 
 items.each { taskID, answers ->
-    study.addItemAsArray(answers.inject(new Integer[raters.size()]) { array, workerID, answer ->
-        array[raters.get(workerID)] = answer
+    study.addItemAsArray(answers.inject(new Integer[workers.size()]) { array, workerID, answer ->
+        array[workers.get(workerID)] = answer
         array
     })
 }

@@ -51,8 +51,5 @@ printf('PercentageAgreement: %f\n', percent.calculateAgreement())
 alphaNominal = new KrippendorffAlphaAgreement(study, new NominalDistanceFunction())
 printf('KrippendorffAlphaAgreement: %f\n', alphaNominal.calculateAgreement())
 
-fleissKappa = new FleissKappaAgreement(study)
-printf('FleissKappaAgreement: %f\n', fleissKappa.calculateAgreement())
-
 randolphKappa = new RandolphKappaAgreement(study)
 printf('RandolphKappaAgreement: %f\n', randolphKappa.calculateAgreement())

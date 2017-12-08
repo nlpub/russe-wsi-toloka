@@ -18,5 +18,8 @@ tasks-eval.tsv:
 report.tsv:
 	./report.py tasks-eval.tsv aggregated_results_pool_1036853__2017_12_01.tsv > report.tsv
 
+agreement.tsv:
+	./agreement.groovy assignments_01-12-2017.tsv > agreement.tsv
+
 clean:
 	rm -fv *.tsv

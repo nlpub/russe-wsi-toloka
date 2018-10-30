@@ -103,6 +103,7 @@ ENV/
 # PyCharm
 /.idea
 
-/*.ods
 /*.tsv
 /*.txt
+*.ods
+*.xz

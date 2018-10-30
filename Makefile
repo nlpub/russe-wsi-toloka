@@ -21,5 +21,8 @@ report.tsv:
 agreement.txt:
 	./agreement.groovy assignments_01-12-2017.tsv | tee agreement.txt
 
+bts-rnc-crowd.tsv: report-curated.tsv
+	./bts-rnc-crowd.awk $< > $@
+
 clean:
 	rm -fv *.tsv *.txt
